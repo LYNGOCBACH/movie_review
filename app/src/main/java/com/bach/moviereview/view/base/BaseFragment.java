@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,9 +17,14 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewbinding.ViewBinding;
 
+import com.bach.moviereview.OnAPICallBack;
 import com.bach.moviereview.OnMainCallBack;
+import com.bach.moviereview.view.fragment.LoginFragment;
+import com.bach.moviereview.viewmodel.BaseViewModel;
 
-public abstract class BaseFragment<B extends ViewBinding, M extends ViewModel> extends Fragment implements View.OnClickListener {
+import okhttp3.ResponseBody;
+
+public abstract class BaseFragment<B extends ViewBinding, M extends BaseViewModel> extends Fragment implements View.OnClickListener, OnAPICallBack {
     protected Context context;
     protected B binding;
     protected M viewModel;
@@ -36,6 +42,7 @@ public abstract class BaseFragment<B extends ViewBinding, M extends ViewModel> e
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = initViewBinding(inflater, container);
         viewModel = new ViewModelProvider(this).get(initViewModel());
+        viewModel.setCallBack(this);
         initViews();
         return binding.getRoot();
     }
@@ -63,5 +70,22 @@ public abstract class BaseFragment<B extends ViewBinding, M extends ViewModel> e
     public void setCallBack(OnMainCallBack callBack) {
         this.callBack = callBack;
     }
+
+    @Override
+    public void apiSuccess(String key, Object data) {
+//        do nothing
+    }
+
+    @Override
+    public void apiError(String key, int code, Object data) {
+        if (code == 401) {
+            callBack.showFragment(LoginFragment.TAG, null, false);
+            Toast.makeText(context, "Phiên đăng nhập đã hết hạn", Toast.LENGTH_SHORT).show();
+
+        } else {
+            Toast.makeText(context, "Error: " + code + ", " + data, Toast.LENGTH_SHORT).show();
+        }
+    }
+
 }
 
